@@ -17,23 +17,20 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "test_framework.h"
 #include "reftable-tests.h"
+#include "dir.h"
 
 #include <sys/types.h>
 #include <dirent.h>
 
 static void clear_dir(const char *dirname)
 {
-	int fd = open(dirname, O_DIRECTORY, 0);
-	DIR *dir = fdopendir(fd);
-	struct dirent *ent = NULL;
+	struct strbuf buf = STRBUF_INIT;
 
-	assert(fd >= 0);
+	strbuf_addstr(&buf, dirname);
+	if (remove_dir_recursively(&buf, 0) < 0)
+		die("Could not remove '%s'", dirname);
 
-	while ((ent = readdir(dir)) != NULL) {
-		unlinkat(fd, ent->d_name, 0);
-	}
-	closedir(dir);
-	rmdir(dirname);
+	strbuf_release(&buf);
 }
 
 static void test_read_file(void)
